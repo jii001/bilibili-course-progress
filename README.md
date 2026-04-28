@@ -3,6 +3,7 @@
 一个用于统计 Bilibili 多 P 视频课程学习进度的 Tampermonkey/Violentmonkey 用户脚本。
 
 它按真实视频时长计算进度，而不是只看“第几 P / 共几 P”。
+<img width="644" height="963" alt="image" src="https://github.com/user-attachments/assets/0be0bea9-2013-4e1a-b642-edf1d83f3134" />
 
 ## 功能
 
