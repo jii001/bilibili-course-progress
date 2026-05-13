@@ -21,7 +21,8 @@
    - [Tampermonkey](https://www.tampermonkey.net/)
    - [Violentmonkey](https://violentmonkey.github.io/)
 2. 打开脚本文件：
-   - [CDN 安装链接](https://cdn.jsdelivr.net/gh/jii001/bilibili-course-progress@main/bilibili-course-progress.user.js)
+   - [Raw 安装链接](https://raw.githubusercontent.com/jii001/bilibili-course-progress/main/bilibili-course-progress.user.js)
+   - [CDN 备用镜像](https://cdn.jsdelivr.net/gh/jii001/bilibili-course-progress@main/bilibili-course-progress.user.js)
    - [GitHub 源码](./bilibili-course-progress.user.js)
 3. 复制全部内容，新建用户脚本并保存。
 4. 打开 Bilibili 多 P 视频页面，例如：
