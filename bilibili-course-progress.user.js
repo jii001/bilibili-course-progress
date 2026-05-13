@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Bilibili 多P课程学习进度
 // @namespace    https://ji.local/tools
-// @version      1.0.0
+// @version      1.1.0
 // @description  按多P总时长、当前P播放进度统计 Bilibili 课程学习进度，并支持导出 CSV。
 // @author       Codex
 // @license      MIT
@@ -20,6 +20,7 @@
   const PANEL_ID = "ji-bili-course-progress-panel";
   const STYLE_ID = "ji-bili-course-progress-style";
   const STORAGE_HOURS_KEY = "ji-bili-course-progress-daily-hours";
+  const STORAGE_TODAY_WATCH_KEY = "ji-bili-course-progress-today-watch";
 
   function secToHMS(sec, compact = false) {
     const value = Math.max(0, Math.round(Number(sec) || 0));
@@ -48,6 +49,28 @@
     const search = locationLike?.search || "";
     const p = Number(new URLSearchParams(search).get("p") || 1);
     return Number.isFinite(p) && p > 0 ? Math.floor(p) : 1;
+  }
+
+  function getLocalDateKey(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function parseTodayWatchedSeconds(raw, dateKey = getLocalDateKey()) {
+    try {
+      const record = JSON.parse(raw || "{}");
+      if (record.dateKey !== dateKey) return 0;
+      return Math.max(0, Number(record.seconds) || 0);
+    } catch {
+      return 0;
+    }
+  }
+
+  function normalizeWatchDelta(previousTime, currentTime, maxDelta = 5) {
+    const delta = (Number(currentTime) || 0) - (Number(previousTime) || 0);
+    return delta > 0 && delta <= maxDelta ? delta : 0;
   }
 
   function computeProgress(pages, currentP, currentTime) {
@@ -123,6 +146,9 @@
     secToHMS,
     getBvidFromLocation,
     getCurrentP,
+    getLocalDateKey,
+    parseTodayWatchedSeconds,
+    normalizeWatchDelta,
     computeProgress,
     buildRows,
     buildCsv,
@@ -144,6 +170,12 @@
     error: "",
     loading: true,
     lastUrl: location.href
+  };
+
+  let watchTracker = {
+    video: null,
+    lastTime: 0,
+    dateKey: getLocalDateKey()
   };
 
   function injectStyle() {
@@ -281,6 +313,52 @@
     return Number(video?.currentTime) || 0;
   }
 
+  function getTodayWatchedSeconds() {
+    return parseTodayWatchedSeconds(localStorage.getItem(STORAGE_TODAY_WATCH_KEY), getLocalDateKey());
+  }
+
+  function saveTodayWatchedSeconds(seconds) {
+    localStorage.setItem(
+      STORAGE_TODAY_WATCH_KEY,
+      JSON.stringify({
+        dateKey: getLocalDateKey(),
+        seconds: Math.max(0, Number(seconds) || 0)
+      })
+    );
+  }
+
+  function resetWatchTracker(video) {
+    watchTracker = {
+      video,
+      lastTime: Number(video?.currentTime) || 0,
+      dateKey: getLocalDateKey()
+    };
+  }
+
+  function trackTodayWatchTime() {
+    const video = document.querySelector("video");
+    if (!video) {
+      resetWatchTracker(null);
+      return;
+    }
+
+    const dateKey = getLocalDateKey();
+    if (watchTracker.video !== video || watchTracker.dateKey !== dateKey) {
+      resetWatchTracker(video);
+      return;
+    }
+
+    const currentTime = Number(video.currentTime) || 0;
+    if (!video.paused && !video.seeking && !video.ended) {
+      const delta = normalizeWatchDelta(watchTracker.lastTime, currentTime);
+      if (delta > 0) {
+        saveTodayWatchedSeconds(getTodayWatchedSeconds() + delta);
+      }
+    }
+
+    watchTracker.lastTime = currentTime;
+  }
+
   function createPanel() {
     const existing = document.getElementById(PANEL_ID);
     if (existing) return existing;
@@ -340,6 +418,7 @@
     }
 
     const progress = computeProgress(state.pages, getCurrentP(location), getVideoCurrentTime());
+    const todayWatched = getTodayWatchedSeconds();
     const dailyHours = Math.max(0, Number(localStorage.getItem(STORAGE_HOURS_KEY) || 2) || 2);
     const etaDays = dailyHours > 0 ? progress.remaining / (dailyHours * 3600) : 0;
     const finishDate = dailyHours > 0 ? new Date(Date.now() + Math.ceil(etaDays) * 86400000) : null;
@@ -350,6 +429,7 @@
       <div class="jibcp-row"><span class="jibcp-label">当前分P</span><span class="jibcp-value" data-field="current"></span></div>
       <div class="jibcp-row"><span class="jibcp-label">总时长</span><span class="jibcp-value" data-field="total"></span></div>
       <div class="jibcp-row"><span class="jibcp-label">已看时长</span><span class="jibcp-value" data-field="watched"></span></div>
+      <div class="jibcp-row"><span class="jibcp-label">今日已观看</span><span class="jibcp-value" data-field="today-watched"></span></div>
       <div class="jibcp-row"><span class="jibcp-label">剩余时长</span><span class="jibcp-value" data-field="remaining"></span></div>
       <div class="jibcp-row"><span class="jibcp-label">当前P播放</span><span class="jibcp-value" data-field="current-time"></span></div>
       <div class="jibcp-progress" title="时间进度"><div class="jibcp-bar" data-field="bar"></div></div>
@@ -365,6 +445,7 @@
     setText(content, '[data-field="current"]', `P${progress.currentP} / P${progress.pageCount}`);
     setText(content, '[data-field="total"]', secToHMS(progress.total));
     setText(content, '[data-field="watched"]', secToHMS(progress.watched));
+    setText(content, '[data-field="today-watched"]', secToHMS(todayWatched));
     setText(content, '[data-field="remaining"]', secToHMS(progress.remaining));
     setText(content, '[data-field="current-time"]', `${secToHMS(progress.currentTime)} / ${secToHMS(progress.currentDuration)}`);
     setText(content, '[data-field="percent"]', `${progress.percent.toFixed(2)}%`);
@@ -456,6 +537,7 @@
     createPanel();
     loadPages();
     setInterval(() => {
+      trackTodayWatchTime();
       if (state.lastUrl !== location.href) {
         state.lastUrl = location.href;
         loadPages();
