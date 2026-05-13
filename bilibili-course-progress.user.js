@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Bilibili 多P课程学习进度
 // @namespace    https://ji.local/tools
-// @version      1.1.0
+// @version      1.1.1
 // @description  按多P总时长、当前P播放进度统计 Bilibili 课程学习进度，并支持导出 CSV。
 // @author       Codex
 // @license      MIT
 // @homepageURL  https://github.com/jii001/bilibili-course-progress
 // @supportURL   https://github.com/jii001/bilibili-course-progress/issues
+// @downloadURL  https://cdn.jsdelivr.net/gh/jii001/bilibili-course-progress@main/bilibili-course-progress.user.js
+// @updateURL    https://cdn.jsdelivr.net/gh/jii001/bilibili-course-progress@main/bilibili-course-progress.user.js
 // @match        https://www.bilibili.com/video/*
 // @match        https://www.bilibili.com/list/*
 // @connect      api.bilibili.com
@@ -38,9 +40,11 @@
   function getBvidFromLocation(locationLike) {
     const href = locationLike?.href || "";
     const pathname = locationLike?.pathname || "";
+    const search = locationLike?.search || "";
     return (
       pathname.match(/\/video\/(BV[a-zA-Z0-9]+)/)?.[1] ||
       href.match(/\/video\/(BV[a-zA-Z0-9]+)/)?.[1] ||
+      new URLSearchParams(search).get("bvid") ||
       null
     );
   }
