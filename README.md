@@ -3,7 +3,6 @@
 一个用于统计 Bilibili 多 P 视频课程学习进度的 Tampermonkey/Violentmonkey 用户脚本。
 
 它按真实视频时长计算进度，而不是只看“第几 P / 共几 P”。
-<img width="644" height="963" alt="image" src="https://github.com/user-attachments/assets/0be0bea9-2013-4e1a-b642-edf1d83f3134" />
 
 ## 功能
 
@@ -11,6 +10,7 @@
 - 读取所有分 P 的标题和时长
 - 读取当前播放器的 `video.currentTime`
 - 计算总课程时长、已看时长、剩余时长和时间进度
+- 统计今日已观看内容时长
 - 支持按每天学习小时数估算剩余天数
 - 支持导出 CSV，便于导入 Excel、WPS、Notion 或 Obsidian
 - 支持刷新和收起悬浮面板
@@ -41,6 +41,8 @@ https://www.bilibili.com/video/BVxxxxxxxxxx/?p=2
 
 注意：这个脚本默认你是从第 1 P 按顺序看到当前 P。  
 如果你跳着看，它统计的是“按顺序内容覆盖进度”，不是 Bilibili 的真实观看历史。
+
+“今日已观看”按本地日期保存在浏览器 `localStorage` 中，只在视频实际播放且播放进度正常前进时累计。拖动进度条造成的大跳转不会计入今日观看时长。
 
 ## 导出 CSV
 
