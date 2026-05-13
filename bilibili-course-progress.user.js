@@ -7,8 +7,8 @@
 // @license      MIT
 // @homepageURL  https://github.com/jii001/bilibili-course-progress
 // @supportURL   https://github.com/jii001/bilibili-course-progress/issues
-// @downloadURL  https://cdn.jsdelivr.net/gh/jii001/bilibili-course-progress@main/bilibili-course-progress.user.js
-// @updateURL    https://cdn.jsdelivr.net/gh/jii001/bilibili-course-progress@main/bilibili-course-progress.user.js
+// @downloadURL  https://raw.githubusercontent.com/jii001/bilibili-course-progress/main/bilibili-course-progress.user.js
+// @updateURL    https://raw.githubusercontent.com/jii001/bilibili-course-progress/main/bilibili-course-progress.user.js
 // @match        https://www.bilibili.com/video/*
 // @match        https://www.bilibili.com/list/*
 // @connect      api.bilibili.com
